@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔐 Secure Documents</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 700px;
+            width: 100%;
+            position: relative;
+        }
+        
+        .info-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .info-icon:hover {
+            background: #5568d3;
+            transform: scale(1.1);
+        }
+        
+        .main-title {
+            font-size: 2.5em;
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+        
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 15px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .mode-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .mode {
+            display: none;
+        }
+        
+        .mode.active {
+            display: block;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            resize: vertical;
+            min-height: 150px;
+            margin: 10px 0;
+        }
+
+        input[type="file"] {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin: 20px 0;
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        
+        .key-display {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .success {
+            color: #28a745;
+            font-size: 1.1em;
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: #d4edda;
+            border-radius: 10px;
+        }
+        
+        .info {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .drop-zone {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 20px 0;
+        }
+        
+        .drop-zone:hover {
+            background: #f8f9ff;
+            border-color: #5568d3;
+        }
+        
+        .drop-zone.dragover {
+            background: #e7f3ff;
+            border-color: #2196F3;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .button-group button {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Info Icon -->
+        <div class="info-icon" onclick="alert('🔐 Secure Document Vault\n\n1. Generate Keys: Create your encryption keys\n2. Encrypt: Encrypt files for others\n3. Decrypt: Decrypt files sent to you\n\nAll operations happen locally in your browser!')" title="Information">ℹ️</div>
+        
+        <div class="main-title">🔐 Secure Vault</div>
+        
+        <!-- Mode Selector -->
+        <div class="mode-selector">
+            <button class="mode-btn active" onclick="switchMode('generate')">🔑 Generate Keys</button>
+            <button class="mode-btn" onclick="switchMode('encrypt')">🔒 Encrypt</button>
+            <button class="mode-btn" onclick="switchMode('decrypt')">🔓 Decrypt</button>
+        </div>
+        
+        <!-- ════════════════════════════════════════════════ -->
+        <!-- GENERATE MODE -->
+        <!-- ════════════════════════════════════════════════ -->
+        <div id="generate-mode" class="mode active">
+            <h1>🔑 Generate Key Pair</h1>
+            
+            <div class="info">
+                ℹ️ <strong>What are these keys?</strong><br>
+                • <strong>Private Key:</strong> Keep this SECRET! Used to decrypt files.<br>
+                • <strong>Public Key:</strong> Share this with people who want to send you encrypted files.
+            </div>
+
+            <div class="warning">
+                ⚠️ <strong>Important:</strong> After generating, download and save both keys in a safe place! If you lose your private key, you cannot decrypt files sent to you.
+            </div>
+            
+            <button onclick="generateKeys()">🎲 Generate New Key Pair</button>
+            
+            <div id="keys-result" style="display:none; margin-top: 30px;">
+                <div class="success">
+                    ✅ Keys generated successfully!
+                </div>
+
+                <h3>📤 Public Key (Share this):</h3>
+                <div class="key-display" id="public-key-display"></div>
+                <button onclick="copyPublicKey()">📋 Copy Public Key</button>
+
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid #dee2e6;">
+
+                <h3>🔒 Private Key (Keep SECRET!):</h3>
+                <div class="key-display" id="private-key-display"></div>
+                <button onclick="copyPrivateKey()">📋 Copy Private Key</button>
+
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid #dee2e6;">
+
+                <div class="button-group">
+                    <button onclick="downloadPublicKey()">💾 Download Public Key</button>
+                    <button onclick="downloadPrivateKey()">💾 Download Private Key</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- ════════════════════════════════════════════════ -->
+        <!-- ENCRYPT MODE -->
+        <!-- ══════════════════════���═════════════════════════ -->
+        <div id="encrypt-mode" class="mode">
+            <h1>🔒 Encrypt File</h1>
+            
+            <div class="info">
+                ℹ️ Paste the recipient's <strong>public key</strong> below to encrypt a file for them.
+            </div>
+            
+            <h3>👤 Recipient's Public Key:</h3>
+            <textarea id="recipient-pubkey" placeholder="Paste the public key here...&#10;&#10;-----BEGIN PUBLIC KEY-----&#10;MIICIjANBgkqhkiG9w0BAQ...&#10;-----END PUBLIC KEY-----"></textarea>
+            
+            <h3>📁 Select File to Encrypt:</h3>
+            <input type="file" id="file-input-encrypt">
+            
+            <button onclick="encryptFile()">🔒 Encrypt File</button>
+            
+            <div id="encrypt-result"></div>
+        </div>
+        
+        <!-- ════════════════════════════════════════════════ -->
+        <!-- DECRYPT MODE -->
+        <!-- ════════════════════════════════════════════════ -->
+        <div id="decrypt-mode" class="mode">
+            <h1>🔓 Decrypt File</h1>
+            
+            <div class="info">
+                ℹ️ Paste your <strong>private key</strong> and select the encrypted file.
+            </div>
+
+            <h3>🔒 Your Private Key:</h3>
+            <textarea id="my-private-key" placeholder="Paste your private key here...&#10;&#10;-----BEGIN PRIVATE KEY-----&#10;MIIJQgIBADANBgkqhkiG9w...&#10;-----END PRIVATE KEY-----"></textarea>
+            
+            <h3>📁 Select Encrypted File:</h3>
+            <input type="file" id="file-input-decrypt" accept=".bin,.encrypted">
+            
+            <button onclick="decryptFile()">🔓 Decrypt File</button>
+            
+            <div id="decrypt-result"></div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════
+        // MODE SWITCHING
+        // ═══════════════════════════════════════════════════════════
+        
+        function switchMode(mode) {
+            // Update buttons
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update content
+            document.querySelectorAll('.mode').forEach(m => m.classList.remove('active'));
+            document.getElementById(mode + '-mode').classList.add('active');
+        }
+        
+        // ═══════════════════════════════════════════════════════════
+        // GENERATE KEYS
+        // ═══════════��═══════════════════════════════════════════════
+        
+        let generatedPublicKeyPEM = null;
+        let generatedPrivateKeyPEM = null;
+        
+        async function generateKeys() {
+            const resultDiv = document.getElementById('keys-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Generating keys (this may take 10 seconds)...</p></div>';
+            
+            try {
+                // Generate RSA-4096 key pair
+                const keyPair = await crypto.subtle.generateKey(
+                    {
+                        name: "RSA-OAEP",
+                        modulusLength: 4096,
+                        publicExponent: new Uint8Array([1, 0, 1]),
+                        hash: "SHA-256"
+                    },
+                    true,
+                    ["encrypt", "decrypt"]
+                );
+                
+                // Export public key
+                const publicKeyRaw = await crypto.subtle.exportKey("spki", keyPair.publicKey);
+                generatedPublicKeyPEM = formatAsPEM(publicKeyRaw, 'PUBLIC KEY');
+                
+                // Export private key
+                const privateKeyRaw = await crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
+                generatedPrivateKeyPEM = formatAsPEM(privateKeyRaw, 'PRIVATE KEY');
+                
+                // Display keys
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Keys generated successfully!
+                    </div>
+
+                    <h3>📤 Public Key (Share this):</h3>
+                    <div class="key-display" id="public-key-display">${escapeHtml(generatedPublicKeyPEM)}</div>
+                    <button onclick="copyPublicKey()">📋 Copy Public Key</button>
+
+                    <hr style="margin: 30px 0; border: none; border-top: 1px solid #dee2e6;">
+
+                    <h3>🔒 Private Key (Keep SECRET!):</h3>
+                    <div class="key-display" id="private-key-display">${escapeHtml(generatedPrivateKeyPEM)}</div>
+                    <button onclick="copyPrivateKey()">📋 Copy Private Key</button>
+
+                    <hr style="margin: 30px 0; border: none; border-top: 1px solid #dee2e6;">
+
+                    <div class="button-group">
+                        <button onclick="downloadPublicKey()">💾 Download Public Key</button>
+                        <button onclick="downloadPrivateKey()">💾 Download Private Key</button>
+                    </div>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div style="color:#dc3545; padding: 20px; background: #f8d7da; border-radius: 10px;">
+                        ❌ Error: ${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function copyPublicKey() {
+            copyToClipboard(generatedPublicKeyPEM, '✅ Public key copied!');
+        }
+        
+        function copyPrivateKey() {
+            copyToClipboard(generatedPrivateKeyPEM, '✅ Private key copied!');
+        }
+        
+        function downloadPublicKey() {
+            downloadTextFile(generatedPublicKeyPEM, 'public_key.txt');
+        }
+        
+        function downloadPrivateKey() {
+            downloadTextFile(generatedPrivateKeyPEM, 'private_key.txt');
+        }
+        
+        // ═══════════════════════════════════════════════════════════
+        // ENCRYPT FILE
+        // ═══════════════════════════════════════════════════════════
+        
+        async function encryptFile() {
+            const file = document.getElementById('file-input-encrypt').files[0];
+            const recipientPubKeyPEM = document.getElementById('recipient-pubkey').value.trim();
+            
+            if (!file) return alert('❌ Please select a file!');
+            if (!recipientPubKeyPEM) return alert('❌ Please paste the recipient\'s public key!');
+            
+            const resultDiv = document.getElementById('encrypt-result');
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Encrypting...</p></div>';
+            
+            try {
+                // Import recipient's public key
+                const recipientPubKey = await importPublicKeyFromPEM(recipientPubKeyPEM);
+                
+                // Read file
+                const fileData = await file.arrayBuffer();
+                
+                // Generate AES key
+                const aesKey = await crypto.subtle.generateKey(
+                    { name: "AES-GCM", length: 256 },
+                    true,
+                    ["encrypt"]
+                );
+                
+                // Encrypt file with AES
+                const nonce = crypto.getRandomValues(new Uint8Array(12));
+                const encryptedFile = await crypto.subtle.encrypt(
+                    { name: "AES-GCM", iv: nonce },
+                    aesKey,
+                    fileData
+                );
+                
+                // Encrypt AES key with RSA
+                const aesKeyRaw = await crypto.subtle.exportKey("raw", aesKey);
+                const encryptedAESKey = await crypto.subtle.encrypt(
+                    { name: "RSA-OAEP" },
+                    recipientPubKey,
+                    aesKeyRaw
+                );
+                
+                // Create package
+                const package = {
+                    encryptedAESKey: arrayBufferToBase64(encryptedAESKey),
+                    nonce: arrayBufferToBase64(nonce),
+                    encryptedFile: arrayBufferToBase64(encryptedFile),
+                    filename: file.name,
+                    timestamp: new Date().toISOString()
+                };
+                
+                // Download encrypted file
+                const packageJSON = JSON.stringify(package);
+                const blob = new Blob([packageJSON], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = file.name.replace(/\.[^/.]+$/, "") + '_encrypted.bin';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ File encrypted successfully!<br>
+                        📥 <strong>${a.download}</strong> has been downloaded.
+                    </div>
+                    <div class="info">
+                        📤 Send this file to the recipient. They can decrypt it with their private key.
+                    </div>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div style="color:#dc3545; padding: 20px; background: #f8d7da; border-radius: 10px;">
+                        ❌ <strong>Encryption failed!</strong><br>${error.message}
+                    </div>
+                `;
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════
+        // DECRYPT FILE
+        // ═══════════════════════════════════════════════════════════
+        
+        async function decryptFile() {
+            const file = document.getElementById('file-input-decrypt').files[0];
+            const privateKeyPEM = document.getElementById('my-private-key').value.trim();
+            
+            if (!file) return alert('❌ Please select an encrypted file!');
+            if (!privateKeyPEM) return alert('❌ Please paste your private key!');
+            
+            const resultDiv = document.getElementById('decrypt-result');
+            resultDiv.innerHTML = `<div class="loading"><div class="spinner"></div><p>Decrypting ${file.name}...</p></div>`;
+            
+            try {
+                // Import private key
+                const privateKey = await importPrivateKeyFromPEM(privateKeyPEM);
+                
+                // Read encrypted file
+                const fileData = await file.arrayBuffer();
+                const decoder = new TextDecoder();
+                const packageJSON = decoder.decode(fileData);
+                const package = JSON.parse(packageJSON);
+                
+                // Decrypt AES key with RSA
+                const encryptedAESKey = base64ToArrayBuffer(package.encryptedAESKey);
+                const aesKeyBytes = await crypto.subtle.decrypt(
+                    { name: "RSA-OAEP" },
+                    privateKey,
+                    encryptedAESKey
+                );
+                
+                // Import AES key
+                const aesKey = await crypto.subtle.importKey(
+                    "raw",
+                    aesKeyBytes,
+                    { name: "AES-GCM" },
+                    false,
+                    ["decrypt"]
+                );
+                
+                // Decrypt file with AES
+                const nonce = base64ToArrayBuffer(package.nonce);
+                const encryptedFile = base64ToArrayBuffer(package.encryptedFile);
+                
+                const decryptedFile = await crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv: nonce },
+                    aesKey,
+                    encryptedFile
+                );
+                
+                // Download decrypted file
+                const blob = new Blob([decryptedFile]);
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = package.filename || 'decrypted_file';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ File decrypted successfully!<br>
+                        📥 <strong>${package.filename}</strong> has been downloaded.
+                    </div>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div style="color:#dc3545; padding: 20px; background: #f8d7da; border-radius: 10px;">
+                        ❌ <strong>Decryption failed!</strong><br>
+                        ${error.message}<br><br>
+                        Make sure you're using the correct private key and the file is not corrupted.
+                    </div>
+                `;
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════
+        // HELPER FUNCTIONS
+        // ═══════════════════════════════════════════════════════════
+        
+        async function importPublicKeyFromPEM(pem) {
+            const pemContents = pem
+                .replace(/-----BEGIN PUBLIC KEY-----/, '')
+                .replace(/-----END PUBLIC KEY-----/, '')
+                .replace(/\s/g, '');
+            const binaryDer = atob(pemContents);
+            const bytes = new Uint8Array(binaryDer.length);
+            for (let i = 0; i < binaryDer.length; i++) {
+                bytes[i] = binaryDer.charCodeAt(i);
+            }
+            
+            return await crypto.subtle.importKey(
+                "spki",
+                bytes.buffer,
+                {
+                    name: "RSA-OAEP",
+                    hash: "SHA-256"
+                },
+                true,
+                ["encrypt"]
+            );
+        }
+        
+        async function importPrivateKeyFromPEM(pem) {
+            const pemContents = pem
+                .replace(/-----BEGIN PRIVATE KEY-----/, '')
+                .replace(/-----END PRIVATE KEY-----/, '')
+                .replace(/\s/g, '');
+            const binaryDer = atob(pemContents);
+            const bytes = new Uint8Array(binaryDer.length);
+            for (let i = 0; i < binaryDer.length; i++) {
+                bytes[i] = binaryDer.charCodeAt(i);
+            }
+            
+            return await crypto.subtle.importKey(
+                "pkcs8",
+                bytes.buffer,
+                {
+                    name: "RSA-OAEP",
+                    hash: "SHA-256"
+                },
+                true,
+                ["decrypt"]
+            );
+        }
+        
+        function formatAsPEM(buffer, label) {
+            const base64 = arrayBufferToBase64(buffer);
+            const lines = base64.match(/.{1,64}/g) || [];
+            return `-----BEGIN ${label}-----\n${lines.join('\n')}\n-----END ${label}-----`;
+        }
+        
+        function arrayBufferToBase64(buffer) {
+            const bytes = new Uint8Array(buffer);
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return btoa(binary);
+        }
+        
+        function base64ToArrayBuffer(base64) {
+            const binary = atob(base64);
+            const bytes = new Uint8Array(binary.length);
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+        
+        function copyToClipboard(text, message) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert(message);
+            }).catch(err => {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert(message);
+            });
+        }
+        
+        function downloadTextFile(content, filename) {
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
