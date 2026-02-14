@@ -178,6 +178,7 @@
             padding: 15px;
             margin: 20px 0;
             border-radius: 5px;
+            font-size: 14px;
         }
 
         .warning {
@@ -237,6 +238,11 @@
 
         .button-group button {
             margin-top: 0;
+        }
+
+        small {
+            color: #666;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -298,7 +304,7 @@
         
         <!-- ════════════════════════════════════════════════ -->
         <!-- ENCRYPT MODE -->
-        <!-- ══════════════════════���═════════════════════════ -->
+        <!-- ════════════════════════════════════════════════ -->
         <div id="encrypt-mode" class="mode">
             <h1>🔒 Encrypt File</h1>
             
@@ -324,14 +330,16 @@
             <h1>🔓 Decrypt File</h1>
             
             <div class="info">
-                ℹ️ Paste your <strong>private key</strong> and select the encrypted file.
+                ℹ️ Paste your <strong>private key</strong> and select the encrypted file.<br>
+                <small>📱 iOS users: If the file is named .bin.json, that's okay!</small>
             </div>
 
             <h3>🔒 Your Private Key:</h3>
             <textarea id="my-private-key" placeholder="Paste your private key here...&#10;&#10;-----BEGIN PRIVATE KEY-----&#10;MIIJQgIBADANBgkqhkiG9w...&#10;-----END PRIVATE KEY-----"></textarea>
             
             <h3>📁 Select Encrypted File:</h3>
-            <input type="file" id="file-input-decrypt" accept=".bin,.encrypted">
+            <input type="file" id="file-input-decrypt" accept=".bin,.encrypted,.json">
+            <small>Accepts: .bin, .encrypted, .json</small>
             
             <button onclick="decryptFile()">🔓 Decrypt File</button>
             
@@ -355,8 +363,34 @@
         }
         
         // ═══════════════════════════════════════════════════════════
+        // UTILITY FUNCTIONS
+        // ═══════════════════════════════════════════════════════════
+        
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+        
+        function downloadFile(content, filename, mimeType = 'application/octet-stream') {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            
+            // iOS braucht das Element im DOM
+            document.body.appendChild(a);
+            a.click();
+            
+            // Cleanup
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }
+        
+        // ═══════════════════════════════════════════════════════════
         // GENERATE KEYS
-        // ═══════════��═══════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════
         
         let generatedPublicKeyPEM = null;
         let generatedPrivateKeyPEM = null;
@@ -429,11 +463,11 @@
         }
         
         function downloadPublicKey() {
-            downloadTextFile(generatedPublicKeyPEM, 'public_key.txt');
+            downloadFile(generatedPublicKeyPEM, 'public_key.txt', 'text/plain');
         }
         
         function downloadPrivateKey() {
-            downloadTextFile(generatedPrivateKeyPEM, 'private_key.txt');
+            downloadFile(generatedPrivateKeyPEM, 'private_key.txt', 'text/plain');
         }
         
         // ═══════════════════════════════════════════════════════════
@@ -489,22 +523,17 @@
                     timestamp: new Date().toISOString()
                 };
                 
-                // Download encrypted file
+                // Download encrypted file (iOS FIX: use octet-stream!)
                 const packageJSON = JSON.stringify(package);
-                const blob = new Blob([packageJSON], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = file.name.replace(/\.[^/.]+$/, "") + '_encrypted.bin';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                const filename = file.name.replace(/\.[^/.]+$/, "") + '_encrypted.bin';
+                downloadFile(packageJSON, filename, 'application/octet-stream');
+                
+                const iosNote = isIOS() ? '<br><small>📱 Check your Downloads folder or Files app.</small>' : '';
                 
                 resultDiv.innerHTML = `
                     <div class="success">
                         ✅ File encrypted successfully!<br>
-                        📥 <strong>${a.download}</strong> has been downloaded.
+                        📥 <strong>${filename}</strong> has been downloaded.${iosNote}
                     </div>
                     <div class="info">
                         📤 Send this file to the recipient. They can decrypt it with their private key.
@@ -572,20 +601,15 @@
                 );
                 
                 // Download decrypted file
-                const blob = new Blob([decryptedFile]);
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = package.filename || 'decrypted_file';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                const decryptedFilename = package.filename || 'decrypted_file';
+                downloadFile(decryptedFile, decryptedFilename, 'application/octet-stream');
+                
+                const iosNote = isIOS() ? '<br><small>📱 Check your Downloads folder or Files app.</small>' : '';
                 
                 resultDiv.innerHTML = `
                     <div class="success">
                         ✅ File decrypted successfully!<br>
-                        📥 <strong>${package.filename}</strong> has been downloaded.
+                        📥 <strong>${decryptedFilename}</strong> has been downloaded.${iosNote}
                     </div>
                 `;
                 
@@ -601,7 +625,7 @@
         }
         
         // ═══════════════════════════════════════════════════════════
-        // HELPER FUNCTIONS
+        // CRYPTO HELPER FUNCTIONS
         // ═══════════════════════════════════════════════════════════
         
         async function importPublicKeyFromPEM(pem) {
@@ -678,26 +702,23 @@
             navigator.clipboard.writeText(text).then(() => {
                 alert(message);
             }).catch(err => {
+                // Fallback für ältere Browser
                 const textArea = document.createElement('textarea');
                 textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
                 document.body.appendChild(textArea);
                 textArea.select();
-                document.execCommand('copy');
+                
+                try {
+                    document.execCommand('copy');
+                    alert(message);
+                } catch (e) {
+                    alert('❌ Could not copy. Please copy manually.');
+                }
+                
                 document.body.removeChild(textArea);
-                alert(message);
             });
-        }
-        
-        function downloadTextFile(content, filename) {
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
         }
         
         function escapeHtml(text) {
