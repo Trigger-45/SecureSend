@@ -178,6 +178,7 @@
             padding: 15px;
             margin: 20px 0;
             border-radius: 5px;
+            font-size: 14px;
         }
 
         .warning {
@@ -237,6 +238,63 @@
 
         .button-group button {
             margin-top: 0;
+        }
+
+        .password-protection {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #667eea;
+        }
+
+        .password-protection label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .password-protection input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .password-input-group {
+            margin-top: 15px;
+            display: none;
+        }
+
+        .password-input-group.active {
+            display: block;
+        }
+
+        .password-input-group input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .password-input-group input[type="password"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .password-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        small {
+            color: #666;
+            font-size: 12px;
         }
     </style>
 </head>
@@ -298,7 +356,7 @@
         
         <!-- ════════════════════════════════════════════════ -->
         <!-- ENCRYPT MODE -->
-        <!-- ══════════════════════���═════════════════════════ -->
+        <!-- ════════════════════════════════════════════════ -->
         <div id="encrypt-mode" class="mode">
             <h1>🔒 Encrypt File</h1>
             
@@ -324,14 +382,16 @@
             <h1>🔓 Decrypt File</h1>
             
             <div class="info">
-                ℹ️ Paste your <strong>private key</strong> and select the encrypted file.
+                ℹ️ Paste your <strong>private key</strong> and select the encrypted file.<br>
+                <small>📱 iOS users: If the file is named .bin.json, that's okay!</small>
             </div>
 
             <h3>🔒 Your Private Key:</h3>
             <textarea id="my-private-key" placeholder="Paste your private key here...&#10;&#10;-----BEGIN PRIVATE KEY-----&#10;MIIJQgIBADANBgkqhkiG9w...&#10;-----END PRIVATE KEY-----"></textarea>
             
             <h3>📁 Select Encrypted File:</h3>
-            <input type="file" id="file-input-decrypt" accept=".bin,.encrypted">
+            <input type="file" id="file-input-decrypt" accept=".bin,.encrypted,.json">
+            <small>Accepts: .bin, .encrypted, .json</small>
             
             <button onclick="decryptFile()">🔓 Decrypt File</button>
             
@@ -355,8 +415,34 @@
         }
         
         // ═══════════════════════════════════════════════════════════
+        // UTILITY FUNCTIONS
+        // ═══════════════════════════════════════════════════════════
+        
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+        
+        function downloadFile(content, filename, mimeType = 'application/octet-stream') {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            
+            // iOS braucht das Element im DOM
+            document.body.appendChild(a);
+            a.click();
+            
+            // Cleanup
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }
+        
+        // ═══════════════════════════════════════════════════════════
         // GENERATE KEYS
-        // ═══════════��═══════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════
         
         let generatedPublicKeyPEM = null;
         let generatedPrivateKeyPEM = null;
@@ -405,6 +491,18 @@
 
                     <hr style="margin: 30px 0; border: none; border-top: 1px solid #dee2e6;">
 
+                    <div class="password-protection">
+                        <label>
+                            <input type="checkbox" id="protect-private-key" onchange="togglePasswordProtection()">
+                            🔐 Private Key mit Passwort schützen
+                        </label>
+                        <div class="password-input-group" id="password-input-group">
+                            <input type="password" id="private-key-password" placeholder="Passwort eingeben...">
+                            <input type="password" id="private-key-password-confirm" placeholder="Passwort bestätigen...">
+                            <div class="password-hint">⚠️ Dieses Passwort wird benötigt, um den Private Key später zu entschlüsseln!</div>
+                        </div>
+                    </div>
+
                     <div class="button-group">
                         <button onclick="downloadPublicKey()">💾 Download Public Key</button>
                         <button onclick="downloadPrivateKey()">💾 Download Private Key</button>
@@ -429,11 +527,120 @@
         }
         
         function downloadPublicKey() {
-            downloadTextFile(generatedPublicKeyPEM, 'public_key.txt');
+            downloadFile(generatedPublicKeyPEM, 'public_key.txt', 'text/plain');
         }
         
-        function downloadPrivateKey() {
-            downloadTextFile(generatedPrivateKeyPEM, 'private_key.txt');
+        async function downloadPrivateKey() {
+            const checkbox = document.getElementById('protect-private-key');
+            
+            // Check if password protection is enabled
+            if (checkbox && checkbox.checked) {
+                const password = document.getElementById('private-key-password').value;
+                const passwordConfirm = document.getElementById('private-key-password-confirm').value;
+                
+                // Validate password
+                if (!password) {
+                    alert('❌ Bitte gib ein Passwort ein!');
+                    return;
+                }
+                
+                if (password.length < 8) {
+                    alert('❌ Das Passwort muss mindestens 8 Zeichen lang sein!');
+                    return;
+                }
+                
+                if (password !== passwordConfirm) {
+                    alert('❌ Die Passwörter stimmen nicht überein!');
+                    return;
+                }
+                
+                try {
+                    // Encrypt private key with password
+                    const encryptedData = await encryptPrivateKeyWithPassword(generatedPrivateKeyPEM, password);
+                    
+                    // Download encrypted file
+                    downloadFile(encryptedData, 'private_key_encrypted.bin', 'application/octet-stream');
+                    
+                    alert('✅ Private Key wurde passwortgeschützt heruntergeladen!\n\n⚠️ Bewahre dein Passwort sicher auf - ohne das Passwort kann der Key nicht wiederhergestellt werden!');
+                } catch (error) {
+                    alert('❌ Fehler beim Verschlüsseln: ' + error.message);
+                }
+            } else {
+                // Download unencrypted (original behavior)
+                downloadFile(generatedPrivateKeyPEM, 'private_key.txt', 'text/plain');
+            }
+        }
+        // ═══════════════════════════════════════════════════════════
+        // PASSWORD PROTECTION
+        // ═══════════════════════════════════════════════════════════
+
+        function togglePasswordProtection() {
+            const checkbox = document.getElementById('protect-private-key');
+            const passwordGroup = document.getElementById('password-input-group');
+            
+            if (checkbox.checked) {
+                passwordGroup.classList.add('active');
+            } else {
+                passwordGroup.classList.remove('active');
+            }
+        }
+
+        async function deriveKeyFromPassword(password, salt) {
+            const encoder = new TextEncoder();
+            const passwordBuffer = encoder.encode(password);
+            
+            // Import password as key material
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw',
+                passwordBuffer,
+                'PBKDF2',
+                false,
+                ['deriveBits', 'deriveKey']
+            );
+            
+            // Derive AES key using PBKDF2
+            return await crypto.subtle.deriveKey(
+                {
+                    name: 'PBKDF2',
+                    salt: salt,
+                    iterations: 100000,
+                    hash: 'SHA-256'
+                },
+                keyMaterial,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
+        }
+
+        async function encryptPrivateKeyWithPassword(privateKeyPEM, password) {
+            const encoder = new TextEncoder();
+            const privateKeyData = encoder.encode(privateKeyPEM);
+            
+            // Generate random salt and IV
+            const salt = crypto.getRandomValues(new Uint8Array(16));
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            
+            // Derive encryption key from password
+            const encryptionKey = await deriveKeyFromPassword(password, salt);
+            
+            // Encrypt private key
+            const encryptedData = await crypto.subtle.encrypt(
+                {
+                    name: 'AES-GCM',
+                    iv: iv
+                },
+                encryptionKey,
+                privateKeyData
+            );
+            
+            // Combine salt + iv + encrypted data
+            const resultBuffer = new Uint8Array(salt.length + iv.length + encryptedData.byteLength);
+            resultBuffer.set(salt, 0);
+            resultBuffer.set(iv, salt.length);
+            resultBuffer.set(new Uint8Array(encryptedData), salt.length + iv.length);
+            
+            return resultBuffer;
         }
         
         // ═══════════════════════════════════════════════════════════
@@ -489,22 +696,17 @@
                     timestamp: new Date().toISOString()
                 };
                 
-                // Download encrypted file
+                // Download encrypted file (iOS FIX: use octet-stream!)
                 const packageJSON = JSON.stringify(package);
-                const blob = new Blob([packageJSON], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = file.name.replace(/\.[^/.]+$/, "") + '_encrypted.bin';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                const filename = file.name.replace(/\.[^/.]+$/, "") + '_encrypted.bin';
+                downloadFile(packageJSON, filename, 'application/octet-stream');
+                
+                const iosNote = isIOS() ? '<br><small>📱 Check your Downloads folder or Files app.</small>' : '';
                 
                 resultDiv.innerHTML = `
                     <div class="success">
                         ✅ File encrypted successfully!<br>
-                        📥 <strong>${a.download}</strong> has been downloaded.
+                        📥 <strong>${filename}</strong> has been downloaded.${iosNote}
                     </div>
                     <div class="info">
                         📤 Send this file to the recipient. They can decrypt it with their private key.
@@ -572,20 +774,15 @@
                 );
                 
                 // Download decrypted file
-                const blob = new Blob([decryptedFile]);
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = package.filename || 'decrypted_file';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                const decryptedFilename = package.filename || 'decrypted_file';
+                downloadFile(decryptedFile, decryptedFilename, 'application/octet-stream');
+                
+                const iosNote = isIOS() ? '<br><small>📱 Check your Downloads folder or Files app.</small>' : '';
                 
                 resultDiv.innerHTML = `
                     <div class="success">
                         ✅ File decrypted successfully!<br>
-                        📥 <strong>${package.filename}</strong> has been downloaded.
+                        📥 <strong>${decryptedFilename}</strong> has been downloaded.${iosNote}
                     </div>
                 `;
                 
@@ -601,7 +798,7 @@
         }
         
         // ═══════════════════════════════════════════════════════════
-        // HELPER FUNCTIONS
+        // CRYPTO HELPER FUNCTIONS
         // ═══════════════════════════════════════════════════════════
         
         async function importPublicKeyFromPEM(pem) {
@@ -678,26 +875,23 @@
             navigator.clipboard.writeText(text).then(() => {
                 alert(message);
             }).catch(err => {
+                // Fallback für ältere Browser
                 const textArea = document.createElement('textarea');
                 textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
                 document.body.appendChild(textArea);
                 textArea.select();
-                document.execCommand('copy');
+                
+                try {
+                    document.execCommand('copy');
+                    alert(message);
+                } catch (e) {
+                    alert('❌ Could not copy. Please copy manually.');
+                }
+                
                 document.body.removeChild(textArea);
-                alert(message);
             });
-        }
-        
-        function downloadTextFile(content, filename) {
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
         }
         
         function escapeHtml(text) {
