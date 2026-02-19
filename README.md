@@ -10,6 +10,20 @@
 
 ---
 
+## ⚠️ Disclaimer
+
+**THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.**
+
+- This is an experimental educational project
+- **NOT** recommended for highly sensitive or classified documents
+- No guarantee against security vulnerabilities
+- Users accept all risks when using this tool
+- The developer assumes no liability for data breaches, encryption failures, or any other damages
+- Always maintain secure backups of important data
+- Use at your own risk
+
+For critical security needs, consult professional security solutions.
+
 ## ✨ Features
 
 - **RSA-4096 Key Generation** - Military-grade encryption keys generated in your browser
